@@ -1,0 +1,183 @@
+<html>
+    <head>
+        <title>Crystal Structure Vizualiser</title>
+        <style>
+            body { margin: 0; }
+            canvas { width: 100%; height: 100% }
+        </style>
+    </head>
+    <body>
+        <script src="js/three.min.js"></script>
+        <script src="js/OrbitControls.js"></script>
+
+        <script>
+            var scene, camera, render, controls;
+
+            init();
+
+            var a = 10;
+            var pi = Math.PI;
+            var opacity = 0.8;
+            var sphereSize = a/6;
+
+            var bluematerial = new THREE.MeshBasicMaterial( { color: 0x0000ff, transparent: true, opacity: opacity } );
+            var redmaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, transparent: true, opacity: opacity } );
+            var greenmaterial = new THREE.MeshBasicMaterial( { color: 0x00ff00, transparent: true, opacity: opacity } );
+            var whitematerial = new THREE.MeshBasicMaterial( { color: 0xffffff } );
+
+            var sphere = new THREE.SphereGeometry(sphereSize, 16, 16);
+            var line = new THREE.CylinderGeometry(a/80, a/50, a, 8, 1, false);
+
+            DiamondCubic();
+
+            render();
+
+            function CubeLattice() {
+                for (var x1 = -a/2; x1 <= a/2; x1 += a) {
+                    for (var x2 = -a/2; x2 <= a/2; x2 += a) {
+                        var cylinderX = new THREE.Mesh(line, whitematerial);
+                        var cylinderY = new THREE.Mesh(line, whitematerial);
+                        var cylinderZ = new THREE.Mesh(line, whitematerial);
+                        cylinderX.rotateX(pi/2);
+                        cylinderX.position.set(x1, x2, 0);
+                        cylinderY.position.set(x1, 0, x2);
+                        // cylinderY needs no rotation
+                        cylinderZ.rotateZ(pi/2);
+                        cylinderZ.position.set(0, x1, x2);
+                        scene.add(cylinderX, cylinderY, cylinderZ);
+                    }
+                }
+            }
+
+            function SimpleCubic() {
+                CubeLattice();
+
+                for (var x = -a/2; x <= a/2; x += a) {
+                    for (var y = -a/2; y <= a/2; y += a) {
+                        for (var z = -a/2; z <= a/2; z += a) {
+                            var atom = new THREE.Mesh(sphere, bluematerial);
+                            atom.position.set(x, y, z);
+                            scene.add(atom);
+                        }
+                    }
+                }
+            }
+
+            function BodyCentric() {
+                SimpleCubic();
+
+                for (var x = -a/2; x <= a/2; x += a) {
+                    var face_atom1 = new THREE.Mesh(sphere, redmaterial);
+                    var face_atom2 = new THREE.Mesh(sphere, redmaterial);
+                    var face_atom3 = new THREE.Mesh(sphere, redmaterial);
+                    face_atom1.position.set(x, 0, 0);
+                    face_atom2.position.set(0, x, 0);
+                    face_atom3.position.set(0, 0, x);
+                    scene.add(face_atom1);
+                    scene.add(face_atom2);
+                    scene.add(face_atom3);
+                }
+            }
+
+            function DiamondCubic() {
+                BodyCentric();
+
+                var atom1 = new THREE.Mesh(sphere, greenmaterial);
+                atom1.position.set(a/4, a/4, a/4);
+                scene.add(atom1);
+                var atom2 = new THREE.Mesh(sphere, greenmaterial);
+                atom2.position.set(-a/4, a/4, -a/4);
+                scene.add(atom2);
+                var atom3 = new THREE.Mesh(sphere, greenmaterial);
+                atom3.position.set(-a/4, -a/4, a/4);
+                scene.add(atom3);
+                var atom4 = new THREE.Mesh(sphere, greenmaterial);
+                atom4.position.set(a/4, -a/4, -a/4);
+                scene.add(atom4);
+
+                var x1, x2;
+                x1 = new THREE.Vector3(-a/4, -a/4, a/4);
+                x2 = new THREE.Vector3(-a/2, -a/2, a/2);
+                scene.add(cylinderMesh(x1, x2));
+                x2 = new THREE.Vector3(-a/2, 0, 0);
+                scene.add(cylinderMesh(x1, x2));
+                x2 = new THREE.Vector3(0, -a/2, 0);
+                scene.add(cylinderMesh(x1, x2));
+                x2 = new THREE.Vector3(0, 0, a/2);
+                scene.add(cylinderMesh(x1, x2));
+
+                x1 = new THREE.Vector3(a/4, a/4, a/4);
+                x2 = new THREE.Vector3(a/2, a/2, a/2);
+                scene.add(cylinderMesh(x1, x2));
+                x2 = new THREE.Vector3(0, 0, a/2);
+                scene.add(cylinderMesh(x1, x2));
+                x2 = new THREE.Vector3(0, a/2, 0);
+                scene.add(cylinderMesh(x1, x2));
+                x2 = new THREE.Vector3(a/2, 0, 0);
+                scene.add(cylinderMesh(x1, x2));
+
+                x1 = new THREE.Vector3(-a/4, a/4, -a/4);
+                x2 = new THREE.Vector3(-a/2, a/2, -a/2);
+                scene.add(cylinderMesh(x1, x2));
+                x2 = new THREE.Vector3(0, 0, -a/2);
+                scene.add(cylinderMesh(x1, x2));
+                x2 = new THREE.Vector3(0, a/2, 0);
+                scene.add(cylinderMesh(x1, x2));
+                x2 = new THREE.Vector3(-a/2, 0, 0);
+                scene.add(cylinderMesh(x1, x2));
+
+                x1 = new THREE.Vector3(a/4, -a/4, -a/4);
+                x2 = new THREE.Vector3(a/2, -a/2, -a/2);
+                scene.add(cylinderMesh(x1, x2));
+                x2 = new THREE.Vector3(0, 0, -a/2);
+                scene.add(cylinderMesh(x1, x2));
+                x2 = new THREE.Vector3(0, -a/2, 0);
+                scene.add(cylinderMesh(x1, x2));
+                x2 = new THREE.Vector3(a/2, 0, 0);
+                scene.add(cylinderMesh(x1, x2));
+            }
+
+            function cylinderMesh(pointX, pointY) {
+                var direction = new THREE.Vector3().subVectors( pointY, pointX );
+
+                var transform = new THREE.Matrix4();
+                transform.set(
+                        1,0,0,0,
+                        0,0,1,0,
+                        0,-1,0,0,
+                        0,0,0,1);
+                var orientation = new THREE.Matrix4();
+                orientation.lookAt(pointX, pointY, new THREE.Object3D().up);
+                orientation.multiply(transform);
+
+                var edgeGeometry = new THREE.CylinderGeometry(a/50, a/50, direction.length(), 8, 1);
+                var edge = new THREE.Mesh( edgeGeometry, whitematerial );
+
+                edge.applyMatrix(orientation)
+                edge.position.x = (pointY.x + pointX.x) / 2;
+                edge.position.y = (pointY.y + pointX.y) / 2;
+                edge.position.z = (pointY.z + pointX.z) / 2;
+                return edge;
+            }
+
+            function init() {
+                scene = new THREE.Scene();
+
+                camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                camera.position.z = 30;
+
+                controls = new THREE.OrbitControls(camera);
+
+                renderer = new THREE.WebGLRenderer();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                document.body.appendChild(renderer.domElement);
+            }
+
+            function render() {
+                requestAnimationFrame(render);
+                controls.update();
+                renderer.render(scene, camera);
+            }
+        </script>
+    </body>
+</html>
